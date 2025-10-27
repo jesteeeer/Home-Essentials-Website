@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-overlay">
+  <div class="login-page">
+    <!-- Left Section -->
+    <div class="login-left">
+      <div class="login-title">
+        <h1>FOSO</h1>
+        <p class="home-essentials">Home Essentials</p>
+        <p class="site-subtitle">Style, Comfort, Function<br>– All in one place</p>
+      </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="login-right">
+      <div class="welcome-box">
+        <h2>Welcome to FOSO</h2>
+        <p>Sign in or create an account to get started.</p>
+        <button class="popup-button" onclick="openModal('loginModal')">Login</button>
+        <button class="popup-button" onclick="openModal('registerModal')">Register</button>
+      </div>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('loginModal')">&times;</span>
+        <h2>Login</h2>
+        <form method="POST" action="{{ url_for('user_login') }}">
+          <label>Username/Email:</label>
+          <input type="text" name="username" required>
+
+          <label>Password:</label>
+          <input type="password" name="password" id="loginPassword" required>
+
+          <div class="show-password">
+            <input type="checkbox" onclick="togglePassword('loginPassword')">
+            <label>Show Password</label>
+          </div>
+
+          <button type="submit" name="action" value="login">Login</button>
+        </form>
+        <div class="modal-footer">
+          Don't have an account? <a onclick="switchModal('loginModal', 'registerModal')">Register</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="registerModal" class="modal">
+      <div class="modal-content register-modal-content">
+        <span class="close" onclick="closeModal('registerModal')">&times;</span>
+        <h2>👤 Create Account</h2>
+        <form method="POST" action="/">
+          <label>Full Name:</label>
+          <div class="form-row">
+            <input type="text" name="first_name" placeholder="First Name" required minlength="3">
+            <input type="text" name="middle_name" placeholder="Middle Name">
+            <input type="text" name="last_name" placeholder="Last Name" required minlength="3">
+          </div>
+
+          <label>Username:</label>
+          <input type="text" name="new_username" placeholder="Username" required minlength="3">
+
+          <label>Password:</label>
+          <input type="password" name="new_password" id="registerPassword" placeholder="Password"
+                 required minlength="9"
+                 pattern="^(?=.*[\d!@#$%^&*()_+]).{9,}$"
+                 title="Must be at least 9 characters and include at least one number or symbol.">
+
+          <div class="show-password">
+            <input type="checkbox" onclick="togglePassword('registerPassword')">
+            <label>Show Password</label>
+          </div>
+
+          <label>Email:</label>
+          <input type="email" name="email" required
+                 pattern="^[a-zA-Z0-9._%+-]{7,}@(?:gmail\.com|yahoo\.com)$"
+                 placeholder="example@gmail.com"
+                 title="Email must be at least 7 characters before @gmail.com or @yahoo.com">
+
+          <label>Phone Number:</label>
+          <input type="tel" name="phone" placeholder="09123456789"
+                 required pattern="^\d{11}$"
+                 title="Phone number must be exactly 11 digits">
+
+          <button type="submit" name="action" value="register">Register</button>
+        </form>
+        <div class="modal-footer">
+          Already have an account? <a onclick="switchModal('registerModal', 'loginModal')">Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+  function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function switchModal(currentId, targetId) {
+    closeModal(currentId);
+    openModal(targetId);
+  }
+
+  function togglePassword(id) {
+    var input = document.getElementById(id);
+    input.type = input.type === "password" ? "text" : "password";
+  }
+
+  window.onclick = function (event) {
+    ['loginModal', 'registerModal'].forEach(id => {
+      const modal = document.getElementById(id);
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  };
+</script>
+
+{% if show_login_modal %}
+<script>
+  // Automatically show the login modal after successful registration
+  window.onload = function () {
+    openModal('loginModal');
+  };
+</script>
+{% endif %}
+
+{% endblock %}

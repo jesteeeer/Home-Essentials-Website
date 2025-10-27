@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-login-container">
+  <div class="admin-login-box">
+    <h2 class="admin-login-title">Admin Login</h2>
+    <form method="POST">
+      <div class="admin-login-field">
+        <label for="username">Username:</label>
+        <input type="text" name="username" required>
+      </div>
+      <div class="admin-login-field">
+        <label for="password">Password:</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit" class="admin-login-button">Login</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

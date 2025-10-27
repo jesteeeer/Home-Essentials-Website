@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const flashMessages = {{ messages | tojson | safe }};
+        flashMessages.forEach(([category, message]) => {
+          Swal.fire({
+            icon: category === 'success' ? 'success' : 'error',
+            title: message,
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 3000
+          });
+        });
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+
+
+<div class="profile-page">
+  <div class="profile-box">
+    <div class="profile-image">
+      <img src="{{ url_for('static', filename='images/default-user.png') }}" alt="Profile Picture">
+      <label for="uploadProfilePic" class="upload-icon">
+        <i class="camera-icon"></i>
+      </label>
+      <input type="file" id="uploadProfilePic" hidden>
+    </div>
+    <div class="profile-details">
+      <p><strong>Full Name:</strong> {{ user.full_name }}</p>
+      <p><strong>Username:</strong> {{ user.username }}</p>
+      <p><strong>Email Address:</strong> {{ user.email }}</p>
+      <p><strong>Phone Number:</strong> {{ user.phone }}</p>
+      <p><strong>Default Address:</strong> {{ user.address }}</p>
+      <div class="profile-actions">
+        <button type="button" class="btn-secondary" onclick="openModal('editModal')">Edit</button>
+        <button type="button" class="btn-secondary" onclick="openModal('passwordModal')">Change Password</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="orders-section">
+    <h3><i class="box-icon"></i> My Orders</h3>
+    {% if orders %}
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Total</th>
+          <th>View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>{{ order.id }}</td>
+          <td>{{ order.date }}</td>
+          <td>{{ order.status }}</td>
+          <td>₱{{ '%.2f'|format(order.total) }}</td>
+          <td>
+            <button onclick="openTrackOrderModal('{{ order.id }}')" class="track-btn">
+              <i class="view-icon"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="no-order-message">No orders yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="reviews-section">
+    <h3>Reviews</h3>
+    {% if reviews %}
+      <div class="reviews-box">
+        {% for review in reviews %}
+          <p class="review-item">
+            "{{ review.comment }}" - {{ review.product_name }} ({{ review.rating }}★)
+          </p>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="no-review-message">No reviews yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('editModal')">&times;</span>
+    <h3>Edit Profile</h3>
+    <form id="editProfileForm" action="{{ url_for('update_profile') }}" method="POST">
+      <label>Full Name</label>
+      <input type="text" name="full_name" value="{{ user.full_name }}" required>
+
+      <label>Phone Number</label>
+      <input type="text" name="phone" value="{{ user.phone }}" pattern="^(09|\+639)\d{9}$" required>
+
+      <label>Default Address</label>
+      <textarea name="address" required>{{ user.address }}</textarea>
+
+      <button type="submit" class="btn-primary">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<div id="passwordModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('passwordModal')">&times;</span>
+    <h3>Change Password</h3>
+    <form id="changePasswordForm" action="{{ url_for('change_password') }}" method="POST">
+      <label>Current Password</label>
+      <input type="password" name="current_password" required>
+
+      <label>New Password</label>
+      <input type="password" name="new_password" id="newPassword" required>
+
+      <label>Confirm New Password</label>
+      <input type="password" name="confirm_password" id="confirmPassword" required>
+
+      <span id="passwordError" style="color:red; display:none; font-size:14px;">Passwords do not match.</span>
+
+      <button type="submit" class="btn-primary">Update Password</button>
+    </form>
+  </div>
+</div>
+
+<div id="trackOrderModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('trackOrderModal')">&times;</span>
+    <h3>Track Order</h3>
+    <div id="orderTrackingContent">
+      <!-- Loaded by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function openTrackOrderModal(orderId) {
+  fetch(`/track_order/${orderId}`)
+    .then(res => res.json())
+    .then(data => {
+      const content = document.getElementById('orderTrackingContent');
+      content.innerHTML = `
+        <p><strong>Status:</strong> ${data.status}</p>
+        <p><strong>Expected Delivery:</strong> ${data.eta}</p>
+        <p><strong>Tracking Notes:</strong><br>${data.notes}</p>
+      `;
+      openModal('trackOrderModal');
+    })
+    .catch(err => {
+      document.getElementById('orderTrackingContent').innerHTML = '<p>Error loading tracking data.</p>';
+      openModal('trackOrderModal');
+    });
+}
+
+document.getElementById('changePasswordForm').addEventListener('submit', function (e) {
+  const newPass = document.getElementById('newPassword').value;
+  const confirmPass = document.getElementById('confirmPassword').value;
+  const error = document.getElementById('passwordError');
+  if (newPass !== confirmPass) {
+    e.preventDefault();
+    error.style.display = 'block';
+  } else {
+    error.style.display = 'none';
+  }
+});
+</script>
+
+{% endblock %}

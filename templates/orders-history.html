@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h2 class="section-title">All User Orders</h2>
+
+  {% if orders %}
+    {% for order in orders %}
+    <div class="order-card">
+      <div class="order-header">
+        <h3>Order #{{ order.id }}</h3>
+        <span class="customer-name">{{ order.customer_name }}</span>
+      </div>
+
+      <div class="order-info">
+        <p><strong>Date:</strong> {{ order.order_date }}</p>
+        <p><strong>Total:</strong> ₱{{ '%.2f'|format(order.total_amount) }}</p>
+      </div>
+
+      <details class="items-summary">
+        <summary><strong>Items Ordered</strong></summary>
+        <ul class="item-list">
+          {% for item in order["items"] %}
+          <li>{{ item.name }} × {{ item.quantity }} — ₱{{ '%.2f'|format(item.price * item.quantity) }}</li>
+          {% endfor %}
+        </ul>
+      </details>
+
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="empty-message">No user orders found.</p>
+  {% endif %}
+</div>
+{% endblock %}

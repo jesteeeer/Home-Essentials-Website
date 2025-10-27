@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="hero">
+  <img src="{{ url_for('static', filename='images/background.png') }}" alt="Hero Image" class="hero-image">
+  <div class="hero-text">
+    <h1 class="hero-title">Home Essentials</h1>
+    <p class="hero-subtitle">Style, Comfort, Function All in one place</p>
+  </div>
+</header>
+
+<!-- Featured Products Section -->
+<section class="featured-section">
+  <h2 class="featured-title">Most Popular Products</h2>
+  <div class="featured-products">
+
+    <!-- Product 1: Rice Cooker (appliance) -->
+    <div class="featured-card" onclick="window.location.href='/order?category=appliances'">
+      <img src="{{ url_for('static', filename='images/rice_cooker.jpeg') }}" alt="Rice Cooker">
+      <h3>Rice Cooker</h3>
+      <p class="price">₱1,000.00</p>
+    </div>
+
+    <!-- Product 2: Sofa (furniture) -->
+    <div class="featured-card" onclick="window.location.href='/order?category=furnishings'">
+      <img src="{{ url_for('static', filename='images/sofa.jpg') }}" alt="Sofa">
+      <h3>Sofa</h3>
+      <p class="price">₱899.00</p>
+    </div>
+
+    <!-- Product 3: Pan (kitchen) -->
+    <div class="featured-card" onclick="window.location.href='/order?category=kitchen'">
+      <img src="{{ url_for('static', filename='images/pan.jpg') }}" alt="Pan">
+      <h3>Pan</h3>
+      <p class="price">₱499.00</p>
+    </div>
+
+  </div>
+</section>
+
+<section class="essentials">
+  <h2>Categories</h2>
+  <div class="essentials-grid">
+
+    <!-- Home Appliances Card -->
+    <div class="card" id="homeAppliancesCard" onclick="handleHomeAppliancesClick()">
+      <p class="card-label">Home<br>Appliances</p>
+      <img src="{{ url_for('static', filename='images/appliances.jpg') }}" alt="Home Appliances">
+    </div>
+
+    <!-- Interior Furnishings Card -->
+    <div class="card" id="furnishingsCard" onclick="handleFurnishingsClick()">
+      <p class="card-label">Interior<br>Furnishings</p>
+      <img src="{{ url_for('static', filename='images/furnitures.jpg') }}" alt="Interior Furnishings">
+    </div>
+
+    <!-- Kitchen Essentials Card -->
+    <div class="card" id="kitchenCard" onclick="handleKitchenClick()">
+      <p class="card-label">Kitchen<br>Essentials</p>
+      <img src="{{ url_for('static', filename='images/kitchen_area.jpg') }}" alt="Kitchen Essentials">
+    </div>
+
+  </div>
+</section>
+
+
+<section class="about">
+  <div class="about-text">
+    <h3>About<br>Us</h3>
+    <p>Welcome to FOSO, your trusted partner for high-quality home appliances that make everyday living easier, smarter, and more efficient.</p>
+  </div>
+</section>
+
+<img src="{{ url_for('static', filename='images/square1pic.jpg') }}" alt="Relaxing Cat" class="cat-image">
+
+
+<!-- JavaScript Section -->
+<script>
+  function toggleLabel(card) {
+    card.classList.toggle('show-label');
+  }
+
+  // Homepage Cards Behavior
+  let hasClickedHome = false;
+  let hasClickedFurnishings = false;
+  let hasClickedKitchen = false;
+
+  function handleHomeAppliancesClick() {
+    const card = document.getElementById('homeAppliancesCard');
+    if (!hasClickedHome) {
+      card.classList.add('show-label');
+      hasClickedHome = true;
+    } else {
+      window.location.href = "/order?category=appliances";
+    }
+  }
+
+  function handleFurnishingsClick() {
+    const card = document.getElementById('furnishingsCard');
+    if (!hasClickedFurnishings) {
+      card.classList.add('show-label');
+      hasClickedFurnishings = true;
+    } else {
+      window.location.href = "/order?category=furnishings";
+    }
+  }
+
+  function handleKitchenClick() {
+    const card = document.getElementById('kitchenCard');
+    if (!hasClickedKitchen) {
+      card.classList.add('show-label');
+      hasClickedKitchen = true;
+    } else {
+      window.location.href = "/order?category=kitchen";
+    }
+  }
+
+  // Dropdown Menu Button Behavior (same as image cards)
+  let dropdownClicks = {
+    appliances: false,
+    furnishings: false,
+    kitchen: false
+  };
+
+  function handleDropdownClick(section) {
+    const labelMap = {
+      appliances: 'Home Appliances',
+      furnishings: 'Interior Furnishings',
+      kitchen: 'Kitchen Essentials'
+    };
+
+    if (!dropdownClicks[section]) {
+      alert(labelMap[section]); // Optional: you can use animation here instead
+      dropdownClicks[section] = true;
+    } else {
+      window.location.href = `/order#${section}`;
+    }
+  }
+
+  // Optional: close dropdown if clicking outside
+  window.addEventListener("click", function(e) {
+    const button = document.querySelector(".dropbtn");
+    const dropdown = document.getElementById("orderDropdown");
+    if (button && !button.contains(e.target)) {
+      dropdown.style.display = "none";
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-dashboard">
+  <div class="dashboard-box">
+    <h1>Welcome to Admin Dashboard</h1>
+
+    <div class="dashboard-buttons">
+      <a href="{{ url_for('dashboard_products') }}" class="dashboard-btn">🛒 Products Inventory</a>
+      <a href="{{ url_for('dashboard_sales') }}" class="dashboard-btn">📈 Monthly Sales</a>
+      <a href="{{ url_for('dashboard_orders') }}"class="dashboard-btn">📋 View All Orders</a>
+
+      <a href="/logout" class="dashboard-btn">🚪 Logout</a>
+    </div>
+
+    <p class="admin-note">Select a section above to manage products, users, orders, and reports.</p>
+  </div>
+</div>
+{% endblock %}

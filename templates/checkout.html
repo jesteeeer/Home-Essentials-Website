@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="checkout-page">
+
+  <!-- Step Indicator -->
+  <div class="step-indicator">
+    <div class="step-block">
+      <span class="step-label">Your Cart</span>
+      <div class="step-circle" id="indicator1">1</div>
+    </div>
+
+    <div class="step-line" id="line1"></div>
+
+    <div class="step-block">
+      <span class="step-label">Checkout Details</span>
+      <div class="step-circle" id="indicator2">2</div>
+    </div>
+
+    <div class="step-line" id="line2"></div>
+
+    <div class="step-block">
+      <span class="step-label">Order Complete</span>
+      <div class="step-circle" id="indicator3">3</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: Cart -->
+  <div id="step1" class="step-page">
+    {% if session.get('cart') %}
+    <div class="cart-section">
+      <!-- <h2>Your Cart ({{ session['cart']|length }})</h2> -->
+      <div class="cart-box">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in session['cart'] %}
+            <tr data-product-id="{{ item.id }}">
+              <td>
+                <div class="cart-item-info">
+                  <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}">
+                  <span>{{ item.name }}</span>
+                </div>
+              </td>
+              <td class="price">₱{{ "%.2f"|format(item.price) }}</td>
+              <td>
+                <div class="quantity-wrapper">
+                  <button type="button" class="qty-btn" onclick="changeQty(this, -1)">−</button>
+                  <input type="number" name="quantities" value="{{ item.quantity }}" min="1" class="qty-input" readonly>
+                  <button type="button" class="qty-btn" onclick="changeQty(this, 1)">+</button>
+                </div>
+                <input type="hidden" name="names" value="{{ item.name }}">
+              </td>
+              <td class="item-total">₱{{ "%.2f"|format(item.price * item.quantity) }}</td>
+              <td class="remove-cell">
+                <form action="{{ url_for('remove_from_cart') }}" method="POST">
+                  <input type="hidden" name="name" value="{{ item.name }}">
+                  <button type="submit" class="remove-btn" title="Remove">✖</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="cart-summary">
+          <p><span>Subtotal:</span> <span id="subtotal">₱{{ subtotal }}</span></p>
+          <p><span>Delivery Fee:</span> <span id="delivery-fee">₱{{ delivery_fee }}</span></p>
+          <hr>
+          <p class="total"><span>Total:</span> <span id="total">₱{{ total }}</span></p>
+        </div>
+
+        <div class="cart-buttons">
+          <a href="{{ url_for('order') }}" class="btn-secondary">← Continue Shopping</a>
+          <button type="button" class="btn-primary" onclick="goToStep(2)">Proceed to Checkout→</button>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-cart">
+      <h2>Your cart is empty</h2>
+      <p>Looks like you haven’t added anything yet.</p>
+      <a href="{{ url_for('order') }}" class="btn-primary">Start Shopping</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- STEP 2: Delivery Info -->
+  <div id="step2" class="step-page" style="display:none;">
+    <div class="delivery-grid">
+      <!-- LEFT SIDE: Delivery Form -->
+      <div class="delivery-left">
+        <h2>Delivery Information</h2>
+        <form id="deliveryForm">
+          <!-- Full Name -->
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" placeholder="e.g. Juan Dela Cruz" required>
+          <span class="error-message" id="error-fullName"></span>
+
+          <!-- Phone Number & Email -->
+          <div class="flex-row">
+            <div>
+              <label for="phoneNumber">Phone Number</label>
+              <input type="text" id="phoneNumber" placeholder="09xxxxxxxxx" required="validatePhoneNumber(this)">
+              <span class="error-message" id="error-phoneNumber"></span>
+            </div>
+            <div>
+              <label for="email">Email Address</label>
+              <input type="email" id="email" placeholder="foso@gmail.com" required>
+              <span class="error-message" id="error-email"></span>
+            </div>
+          </div>
+
+          <!-- Address Selectors -->
+          <div class="flex-row">
+            <div>
+              <label for="region">Region:</label>
+              <select id="region" class="form-select" required></select>
+              <input type="hidden" id="region-text" name="region">
+              <span class="error-message" id="error-region"></span>
+            </div>
+            <div>
+              <label for="province">Province:</label>
+              <select id="province" class="form-select" required></select>
+              <input type="hidden" id="province-text" name="province">
+              <span class="error-message" id="error-province"></span>
+            </div>
+          </div>
+
+          <div class="flex-row">
+            <div>
+              <label for="city">City/Municipality:</label>
+              <select id="city" class="form-select" required></select>
+              <input type="hidden" id="city-text" name="city">
+              <span class="error-message" id="error-city"></span>
+            </div>
+            <div>
+              <label for="barangay">Barangay:</label>
+              <select id="barangay" class="form-select" required></select>
+              <input type="hidden" id="barangay-text" name="barangay">
+              <span class="error-message" id="error-barangay"></span>
+            </div>
+          </div>
+
+          <!-- Street -->
+          <label for="street">Street Address</label>
+          <input type="text" id="street" placeholder="House Number/Street Name/Apartment Unit" required>
+          <span class="error-message" id="error-street"></span>
+
+          <!-- Delivery Note -->
+          <label for="note">Delivery Note (Optional)</label>
+          <textarea id="note" placeholder="Add directions, gate code, etc."></textarea>
+          <p class="note-info">Estimated delivery: 3–5 days</p>
+
+          <!-- Payment Details -->
+          <h2>Payment Details</h2>
+          <div class="payment-methods">
+
+            <label class="payment-card">
+              <input type="radio" name="payment_method" value="Credit Card" class="payment-radio">
+              <div class="payment-info">
+                <strong>Credit Card</strong>
+                <p class="payment-description">Secure and encrypted. Pay using Visa or Mastercard.</p>
+              </div>
+            </label>
+
+            <label class="payment-card" id="bank-transfer-card">
+              <input type="radio" name="payment_method" value="Bank Transfer" class="payment-radio">
+              <div class="payment-info">
+                <strong>Bank Transfer</strong>
+                <p class="payment-description">Transfer the payment manually to our BPI account.</p>
+              </div>
+              <div id="bank-transfer-details" class="payment-details hidden">
+                <label>Account Name</label>
+                <input type="text" id="bank-account-name" placeholder="e.g. FOSO Home Essentials" data-bank-required>
+                <span class="error-message" id="error-bank-account-name"></span>
+
+                <label>BPI Account Number</label>
+                <input type="text" id="bank-account-number" placeholder="e.g. 1234 5678 9012" data-bank-required>
+                <span class="error-message" id="error-bank-account-number"></span>
+
+                <label>Amount</label>
+                <input type="text" id="bank-amount" placeholder="₱0.00" data-bank-required>
+                <span class="error-message" id="error-bank-amount"></span>
+              </div>
+            </label>
+
+            <label class="payment-card">
+              <input type="radio" name="payment_method" value="Cash on Delivery" class="payment-radio">
+              <div class="payment-info">
+                <strong>Cash on Delivery</strong>
+                <p class="payment-description">Pay with cash upon receiving your item. Only for selected areas.</p>
+              </div>
+            </label>
+
+            <label class="payment-card">
+              <input type="radio" name="payment_method" value="GCash" class="payment-radio">
+              <div class="payment-info">
+                <strong>GCash</strong>
+                <p class="payment-description">Pay through GCash. Secure app redirection will follow.</p>
+              </div>
+            </label>
+
+          </div>
+
+          <span class="error-message" id="error-payment"></span>
+
+          <!-- Buttons -->
+          <div class="cart-buttons">
+            <button type="button" class="btn-secondary" onclick="goToStep(1)">← Back to Cart</button>
+            <button type="button" class="btn-primary" onclick="goToStep(3)">Place Order →</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- RIGHT SIDE: Cart Summary -->
+      <div class="delivery-right">
+        <div class="cart-summary-box">
+          <h3>Cart Summary ({{ session['cart']|length }})</h3>
+          <ul class="summary-items">
+            {% for item in session['cart'] %}
+            <li class="summary-item">
+              <span>{{ item.name }} × {{ item.quantity }}</span>
+              <span>₱{{ '%.2f'|format(item.price * item.quantity) }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <hr>
+          <p><strong>Subtotal:</strong> ₱{{ subtotal }}</p>
+          <p><strong>Delivery Fee:</strong> ₱{{ delivery_fee }}</p>
+          <p class="total"><strong>Total:</strong> <strong>₱{{ total }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: Review -->
+<div id="step3" class="step-page" style="display:none;">
+  <div class="confirmation-container">
+
+    <!-- THANK YOU BOX -->
+    <div class="thank-you-box">
+      <h2>Thank you for your order, <span id="review-name">User</span>!</h2>
+      <p class="subtext">Your order has been placed successfully.</p>
+      <p class="note-text">
+        An email confirmation has been sent to
+        <span id="review-email-note">[email]</span>. We’ll notify you once your items are on the way.
+      </p>
+      <a href="{{ url_for('home') }}" class="btn-primary continue-shopping">Continue Shopping</a>
+    </div>
+
+    <!-- GRID -->
+    <div class="confirmation-grid">
+
+      <!-- LEFT: BILLING -->
+      <div class="confirmation-left">
+        <h3>Billing Address</h3>
+        <p><strong>Name:</strong> <span id="review-fullname">Juan Dela Cruz</span></p>
+        <p><strong>Address:</strong> <span id="review-full-address">#4324 Andres Bonifacio St.</span></p>
+        <p><strong>Phone Number:</strong> <span id="review-phone">09999999999</span></p>
+        <p><strong>Email Address:</strong> <span id="review-email">foso@email.com</span></p>
+
+        <div class="confirmation-buttons">
+          <button class="btn-secondary" onclick="window.print()">Print Receipt</button>
+        </div>
+      </div> <!-- ✅ this closes confirmation-left -->
+
+      <!-- RIGHT: SUMMARY -->
+      <div class="confirmation-summary">
+        <p><strong>Order No.</strong><span id="review-order-no" class="summary-value"></span></p>
+        <p><strong>Date</strong><span id="review-date" class="summary-value"></span></p>
+        <p><strong>Payment Method</strong><span id="review-summary-payment" class="summary-value">GCash</span></p>
+        <hr>
+        <div id="review-summary-items"></div>
+        <p><strong>Subtotal:</strong><span id="review-subtotal" class="summary-value">₱0.00</span></p>
+        <p><strong>Delivery Fee:</strong><span id="review-delivery" class="summary-value">₱199.00</span></p>
+        <p class="total"><strong>Order Total:</strong><span id="review-total" class="summary-value">₱0.00</span></p>
+        <p class="estimated">Arrives in 3–5 days<br><small>Estimated delivery</small></p>
+      </div>
+
+    </div> <!-- ✅ closes confirmation-grid -->
+
+  </div> <!-- ✅ closes confirmation-container -->
+</div> <!-- ✅ closes step3 -->
+
+<script>
+// document.getElementById("phoneNumber").addEventListener("input", function () {
+//   this.value = this.value.replace(/[^\d]/g, '').slice(0, 11);
+// });
+function validatePhoneNumber(input) {
+  input.value = input.value.replace(/[^\d]/g, '').slice(0, 11);
+}
+function goToStep(stepNumber) {
+  const totalSteps = 3;
+  for (let i = 1; i <= totalSteps; i++) {
+    document.getElementById(`step${i}`).style.display = (i === stepNumber) ? 'block' : 'none';
+    const circle = document.getElementById(`indicator${i}`);
+    if (circle) {
+      circle.classList.toggle('active', i === stepNumber);
+    }
+  }
+
+  if (stepNumber === 2) {
+  updateStep2Summary(); // <-- Add this
+}
+  if (stepNumber === 3) {
+    let hasError = false;
+
+    // Clear all previous error messages
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+    const requiredFields = [
+      { id: 'fullName', name: 'Full Name' },
+      { id: 'phoneNumber', name: 'Phone Number' },
+      { id: 'email', name: 'Email' },
+      { id: 'region', name: 'Region' },
+      { id: 'province', name: 'Province' },
+      { id: 'city', name: 'City/Municipality' },
+      { id: 'barangay', name: 'Barangay' },
+      { id: 'street', name: 'Street Address' }
+    ];
+
+    // Validate delivery info
+    for (let field of requiredFields) {
+      const input = document.getElementById(field.id);
+      const value = input.value.trim();
+      const errorEl = document.getElementById(`error-${field.id}`);
+
+      if (!value) {
+        errorEl.textContent = `${field.name} is required.`;
+        hasError = true;
+        continue;
+      }
+
+      // Extra validations:
+      if (field.id === "fullName" && value.length < 3) {
+        errorEl.textContent = "Full Name must be at least 3 characters.";
+        hasError = true;
+      }
+
+      if (field.id === "phoneNumber" && (!/^\d{11}$/.test(value))) {
+        errorEl.textContent = "Phone Number must be 11 digits and numeric only.";
+        hasError = true;
+      }
+
+      if (
+        field.id === "email" &&
+        !/^[a-zA-Z0-9._%+-]{6,10}@gmail\.com$/.test(value)
+      ) {
+        errorEl.textContent = "Email must be 6–10 characters before @gmail.com";
+        hasError = true;
+      }
+
+      if (field.id === "street" && value.length < 3) {
+        errorEl.textContent = "Street Address must be at least 3 characters.";
+        hasError = true;
+      }
+    }
+
+    // Validate payment method
+    const paymentChecked = document.querySelector('input[name="payment_method"]:checked');
+    if (!paymentChecked) {
+      const errorPayment = document.getElementById('error-payment');
+      if (errorPayment) errorPayment.textContent = 'Please select a payment method.';
+      hasError = true;
+    }
+
+    // Validate Bank Transfer fields if selected
+    if (paymentChecked && paymentChecked.value === "Bank Transfer") {
+      const bankFields = [
+        { id: 'bank-account-name', name: 'Account Name' },
+        { id: 'bank-account-number', name: 'BPI Account Number' },
+        { id: 'bank-amount', name: 'Amount' }
+      ];
+
+      bankFields.forEach(field => {
+        const input = document.getElementById(field.id);
+        const errorEl = document.getElementById(`error-${field.id}`);
+        if (!input.value.trim()) {
+          if (errorEl) errorEl.textContent = `${field.name} is required.`;
+          hasError = true;
+        }
+      });
+
+      // ✅ Validate Bank Account Name
+      const accountNameInput = document.getElementById("bank-account-name");
+      const accountName = accountNameInput.value.trim();
+      const accountNameError = document.getElementById("error-bank-account-name");
+
+      if (!accountName || accountName.length < 3 || !/^[A-Za-z\s]+$/.test(accountName)) {
+        accountNameError.textContent = "Account name must be at least 3 letters and contain only letters and spaces.";
+        hasError = true;
+      }
+
+      // ✅ Extra validation for account number: 12–16 digits only
+      const accountNumber = document.getElementById("bank-account-number").value.trim();
+      if (!/^\d{12,16}$/.test(accountNumber)) {
+        document.getElementById("error-bank-account-number").textContent =
+          "Account number must be 12 to 16 digits.";
+        hasError = true;
+      }
+
+      // ✅ Extra validation for amount matching total
+      const enteredAmount = parseFloat(document.getElementById("bank-amount").value.replace(/[₱,]/g, ""));
+      const expectedTotal = parseFloat(document.getElementById("total").innerText.replace(/[₱,]/g, ""));
+
+      if (isNaN(enteredAmount) || enteredAmount !== expectedTotal) {
+        document.getElementById("error-bank-amount").textContent =
+          `Amount must match your order total of ₱${expectedTotal.toFixed(2)}.`;
+        hasError = true;
+      }
+    }
+
+    // If there are errors, stay on Step 2
+    if (hasError) {
+      goToStep(2);
+      return;
+    }
+
+    // === Update Order Summary Values in Step 3 ===
+    const subtotalValue = document.getElementById("subtotal").innerText;
+    const deliveryValue = document.getElementById("delivery-fee").innerText;
+    const totalValue = document.getElementById("total").innerText;
+
+    document.getElementById("review-subtotal").innerText = subtotalValue;
+    document.getElementById("review-delivery").innerText = deliveryValue;
+    document.getElementById("review-total").innerText = totalValue;
+
+    // Copy summary items
+    const reviewSummaryItems = document.getElementById("review-summary-items");
+    const step2Items = document.querySelector(".summary-items").cloneNode(true);
+    reviewSummaryItems.innerHTML = step2Items.innerHTML;
+
+
+    // === START: STEP 3 REVIEW SECTION UPDATE ===
+    // === Generate Order No. and Date ===
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
+    const orderNum = `#${now.getFullYear()}${String(now.getMonth()+1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    document.getElementById("review-date").innerText = formattedDate;
+    document.getElementById("review-order-no").innerText = orderNum;
+
+    // === Build cartItems from the DOM ===
+    // === Build cartItems from the DOM ===
+    const cartItems = [];
+    document.querySelectorAll("#step1 .cart-table tbody tr").forEach(row => {
+      const name = row.querySelector(".cart-item-info span").innerText;
+      const id = parseInt(row.dataset.productId);  // You must add this to your HTML
+      const price = parseFloat(row.querySelector(".price").innerText.replace(/[₱,]/g, ""));
+      const quantity = parseInt(row.querySelector(".qty-input").value);
+
+      cartItems.push({ id, name, price, quantity });
+    });
+
+    // === Send order to backend for stock update ===
+    fetch("/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        cartItems: cartItems,
+        name: document.getElementById("fullName").value,
+        phone: document.getElementById("phoneNumber").value,
+        email: document.getElementById("email").value
+      })
+    });
+
+    // === Clear Cart in Flask Session ===
+    fetch("/clear_cart", {
+      method: "POST"
+    });
+
+
+
+    document.getElementById("review-fullname").innerText = document.getElementById("fullName").value;
+    document.getElementById("review-name").innerText     = document.getElementById("fullName").value; // ← NEW
+    document.getElementById("review-phone").innerText    = document.getElementById("phoneNumber").value;
+    document.getElementById("review-email").innerText    = document.getElementById("email").value;
+    document.getElementById("review-email-note").innerText = document.getElementById("email").value;  // ← NEW
+
+    const addressParts = [
+      document.getElementById("street").value,
+      document.getElementById("barangay-text").value,
+      document.getElementById("city-text").value,
+      document.getElementById("province-text").value,
+      document.getElementById("region-text").value
+    ].filter(Boolean);
+    document.getElementById("review-full-address").innerText = addressParts.join(', ');
+
+    const pay = document.querySelector('input[name="payment_method"]:checked');
+    document.getElementById("review-summary-payment").innerText = pay ? pay.value : "";
+
+    if (pay && pay.value === "Bank Transfer") {
+      document.getElementById("review-bank-details").style.display = "block";
+      document.getElementById("review-bank-name").innerText   = document.getElementById("bank-account-name").value;
+      document.getElementById("review-bank-number").innerText = document.getElementById("bank-account-number").value;
+      document.getElementById("review-bank-amount").innerText = document.getElementById("bank-amount").value;
+    } else {
+      document.getElementById("review-bank-details").style.display = "none";
+    }
+  }
+}
+</script>
+
+<script>
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const bankFields = document.getElementById('bank-transfer-details');
+    if (radio.value === "Bank Transfer" && radio.checked) {
+      bankFields.classList.remove("hidden");
+    } else {
+      bankFields.classList.add("hidden");
+    }
+  });
+});
+</script>
+
+<script>
+// Update individual item totals and cart summary in Step 1
+
+function updateTotals() {
+  let subtotal = 0;
+  const rows = document.querySelectorAll("#step1 .cart-table tbody tr");
+
+  rows.forEach(row => {
+    const price = parseFloat(row.querySelector(".price").innerText.replace(/[₱,]/g, ""));
+    const qty = parseInt(row.querySelector(".qty-input").value);
+    const itemTotal = price * qty;
+    row.querySelector(".item-total").innerText = `₱${itemTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    subtotal += itemTotal;
+  });
+
+  const deliveryFee = subtotal > 0 ? 199 : 0;
+  const total = subtotal + deliveryFee;
+
+  document.getElementById("subtotal").innerText = `₱${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  document.getElementById("delivery-fee").innerText = `₱${deliveryFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  document.getElementById("total").innerText = `₱${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+}
+
+// Syncs the delivery page cart summary
+function updateStep2Summary() {
+  const summaryContainer = document.querySelector(".summary-items");
+  summaryContainer.innerHTML = "";
+
+  let subtotal = 0;
+  const rows = document.querySelectorAll("#step1 .cart-table tbody tr");
+
+  rows.forEach(row => {
+    const name = row.querySelector(".cart-item-info span").innerText;
+    const quantity = parseInt(row.querySelector(".qty-input").value);
+    const price = parseFloat(row.querySelector(".price").innerText.replace(/[₱,]/g, ""));
+    const total = quantity * price;
+    subtotal += total;
+
+    summaryContainer.innerHTML += `
+      <li class="summary-item">
+        <span>${name} × ${quantity}</span>
+        <span>₱${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+      </li>
+    `;
+  });
+
+  const deliveryFee = subtotal > 0 ? 199 : 0;
+  const grandTotal = subtotal + deliveryFee;
+
+  const cartSummaryBox = document.querySelector(".cart-summary-box");
+  if (cartSummaryBox) {
+    cartSummaryBox.querySelector("p:nth-of-type(1)").innerHTML = `<strong>Subtotal:</strong> ₱${subtotal.toFixed(2)}`;
+    cartSummaryBox.querySelector("p:nth-of-type(2)").innerHTML = `<strong>Delivery Fee:</strong> ₱${deliveryFee.toFixed(2)}`;
+    cartSummaryBox.querySelector("p.total").innerHTML = `<strong>Total:</strong> <strong>₱${grandTotal.toFixed(2)}</strong>`;
+  }
+}
+
+// The button click function to increase/decrease quantity
+function changeQty(button, delta) {
+  const qtyInput = button.parentElement.querySelector(".qty-input");
+  let currentQty = parseInt(qtyInput.value);
+
+  if (!isNaN(currentQty)) {
+    let newQty = Math.max(1, currentQty + delta);
+    qtyInput.value = newQty;
+    updateTotals();
+    updateStep2Summary();
+  }
+}
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    let currentStep = 1; // Default to step 1 on page load
+
+    // Add 'active' class to step circles based on currentStep
+    for (let i = 1; i <= currentStep; i++) {
+      document.getElementById(`indicator${i}`)?.classList.add("active");
+    }
+
+    // Add 'filled' class to lines if applicable
+    if (currentStep >= 2) {
+      document.getElementById("line1")?.classList.add("filled");
+    }
+    if (currentStep === 3) {
+      document.getElementById("line2")?.classList.add("filled");
+    }
+  });
+</script>
+
+{% endblock %}

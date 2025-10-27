@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-section">
+  <h2>📦 Checkout Addresses</h2>
+  <a href="{{ url_for('admin_dashboard') }}">← Back to Dashboard</a>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Phone</th><th>Email</th>
+        <th>Region</th><th>Province</th><th>City</th><th>Barangay</th>
+        <th>Street</th><th>Note</th><th>Payment</th>
+        <th>Order Date</th><th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for addr in checkout_addresses %}
+      <tr>
+        <td>{{ addr['customer_name'] }}</td>
+        <td>{{ addr['phone'] }}</td>
+        <td>{{ addr['email'] }}</td>
+        <td>{{ addr['region'] }}</td>
+        <td>{{ addr['province'] }}</td>
+        <td>{{ addr['city'] }}</td>
+        <td>{{ addr['barangay'] }}</td>
+        <td>{{ addr['street'] }}</td>
+        <td>{{ addr['note'] }}</td>
+        <td>{{ addr['payment_method'] }}</td>
+        <td>{{ addr['order_date'] }}</td>
+        <td>₱{{ '%.2f'|format(addr['total_amount']) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

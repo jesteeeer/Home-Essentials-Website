@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>FOSO</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page-container">
+    
+    {% if request.endpoint in ['home', 'order'] %}
+    <nav class="navbar">
+      <div class="burger" onclick="document.querySelector('.nav-links').classList.toggle('active')">&#9776;</div>
+      <div class="nav-logo">FOSO</div>
+      <div class="nav-links">
+        <a href="{{ url_for('home') }}">Home</a>
+        <div class="dropdown">
+          <button class="dropbtn" onclick="toggleDropdown()">Orders <span class="arrow">&#9662;</span></button>
+          <div class="dropdown-content" id="orderDropdown">
+            <a href="{{ url_for('order') }}?category=appliances">Home Appliances</a>
+            <a href="{{ url_for('order') }}?category=furnishings">Interior Furnishings</a>
+            <a href="{{ url_for('order') }}?category=kitchen">Kitchen Essentials</a>
+            <a href="{{ url_for('order') }}">All</a>
+
+          </div>
+        </div>
+        <a href="{{ url_for('checkout') }}">
+          <img src="{{ url_for('static', filename='icons/bag.png') }}" alt="Cart" class="icon">
+        </a>
+        {% if session.get('user_logged_in') %}
+        <div class="user-dropdown" onclick="toggleUserDropdown()">
+          <div class="user-info">
+            <img src="{{ url_for('static', filename='icons/user.png') }}" alt="User Icon" class="user-icon">
+            <span class="username">{{ session.get('full_name', session.get('username')) }}</span>
+          </div>
+          <div class="user-menu" id="userMenu">
+            <p>Hello, <strong>{{ session.get('full_name', session.get('username')) }}</strong></p>
+            
+            {% if session.get('email') %}
+            <p><i class="fas fa-envelope"></i> {{ session.get('email') }}</p>
+            {% endif %}
+            
+            {% if session.get('phone') %}
+            <p><i class="fas fa-phone"></i> {{ session.get('phone') }}</p>
+            {% endif %}
+            <a href="{{ url_for('logout_user') }}" class="logout-link">Logout</a>
+          </div>
+
+        </div>
+        {% endif %}
+      </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer enhanced-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h2>FOSO</h2>
+          <p>Style, Comfort, Function<br>— All in one place</p>
+        </div>
+        <div class="footer-links">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('order') }}">Order</a></li>
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-social">
+          <h4>Connect</h4>
+          <ul>
+            <li><a href="#"><i class="fab fa-facebook-f"></i> Facebook</a></li>
+            <li><a href="#"><i class="fab fa-instagram"></i> Instagram</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 FOSO. All rights reserved.</p>
+      </div>
+    </footer>
+
+  </div> <!-- end of .page-container -->
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="{{ url_for('static', filename='js/ph-address-selector.js') }}"></script>
+  <script>
+    function toggleDropdown() {
+      const dropdown = document.getElementById("orderDropdown");
+      dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    }
+
+    function toggleUserDropdown() {
+      const dropdown = document.querySelector('.user-dropdown');
+      dropdown.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(e) {
+      const userDropdown = document.querySelector('.user-dropdown');
+      if (userDropdown && !userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('active');
+      }
+      const dropdown = document.getElementById("orderDropdown");
+      if (dropdown && !e.target.closest('.dropdown')) {
+        dropdown.style.display = "none";
+      }
+    });
+  </script>
+
+  <script 
+    src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+  </script>
+
+</body>
+</html>

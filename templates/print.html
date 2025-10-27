@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Orders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Order List</h1>
+    </header>
+    <main>
+        <table border="1" cellpadding="10">
+            <tr>
+                <th>Name</th>
+                <th>Appliance</th>
+                <th>Kitchen Essential</th>
+                <th>Bathroom Essential</th>
+            </tr>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order["name"] }}</td>
+                <td>{{ order["appliance"] }}</td>
+                <td>{{ order["kitchen_essential"] }}</td>
+                <td>{{ order["bathroom_essential"] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <p><a href="/"><button>Back to Home</button></a></p>
+    </main>
+</body>
+</html>

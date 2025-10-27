@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="category-section" id="category-appliances">
+<!-- Hero: Home Appliances with Video Background -->
+<section class="order-hero">
+  <video autoplay muted loop class="hero-video">
+    <source src="{{ url_for('static', filename='videos/home_appliances.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <div class="hero-text">
+    <h1 class="hero-title">Home Appliances</h1>
+  </div>
+</section>
+
+<!-- Home Appliances -->
+<section id="appliances" class="products">
+  <div class="product-container">
+    {% for product in appliances %}
+    <div class="product-card">
+      <img src="{{ url_for('static', filename='images/' ~ product['image']) }}" alt="{{ product['name'] }}">
+      <form action="{{ url_for('add_to_cart') }}" method="POST" onsubmit="handleAddToCart(event)">
+        <input type="hidden" name="id" value="{{ product['id'] }}">
+        <input type="hidden" name="name" value="{{ product['name'] }}">
+        <input type="hidden" name="price" value="{{ product['price'] }}">
+        <input type="hidden" name="image" value="{{ product['image'] }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="hover-cart-icon-btn">
+          <img class="hover-cart-icon" src="{{ url_for('static', filename='icons/cart.png') }}" alt="Cart Icon">
+        </button>
+      </form>
+      <h4>{{ product['name'] }}</h4>
+      <p class="product-price">₱{{ "{:,.2f}".format(product['price']) }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+</div>
+
+<div class="category-section" id="category-furnishings">
+<!-- Hero: Interior Furnishings with Video Background -->
+<section class="order-hero">
+  <video autoplay muted loop class="hero-video">
+    <source src="{{ url_for('static', filename='videos/interior_furnishing.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <div class="hero-text">
+    <h1 class="hero-title">Interior Furnishings</h1>
+  </div>
+</section>
+
+<!-- Interior Furnishings -->
+<section id="furnishings" class="products">
+  <div class="product-container">
+    {% for product in furnishings %}
+    <div class="product-card">
+      <img src="{{ url_for('static', filename='images/' ~ product['image']) }}" alt="{{ product['name'] }}">
+      <form action="{{ url_for('add_to_cart') }}" method="POST" onsubmit="handleAddToCart(event)">
+        <input type="hidden" name="id" value="{{ product['id'] }}">
+        <input type="hidden" name="name" value="{{ product['name'] }}">
+        <input type="hidden" name="price" value="{{ product['price'] }}">
+        <input type="hidden" name="image" value="{{ product['image'] }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="hover-cart-icon-btn">
+          <img class="hover-cart-icon" src="{{ url_for('static', filename='icons/cart.png') }}" alt="Cart Icon">
+        </button>
+      </form>
+      <h4>{{ product['name'] }}</h4>
+      <p class="product-price">₱{{ "{:,.2f}".format(product['price']) }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+</div>
+
+<div class="category-section" id="category-kitchen">
+<!-- Hero: Kitchen Essentials with Video Background -->
+<section class="order-hero">
+  <video autoplay muted loop class="hero-video">
+    <source src="{{ url_for('static', filename='videos/kitchen_essentials.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <div class="hero-text">
+    <h1 class="hero-title">Kitchen Essentials</h1>
+  </div>
+</section>
+
+<!-- Kitchen Essentials -->
+<section id="kitchen" class="products">
+  <div class="product-container">
+    {% for product in kitchen_essentials %}
+    <div class="product-card">
+      <img src="{{ url_for('static', filename='images/' ~ product['image']) }}" alt="{{ product['name'] }}">
+      <form action="{{ url_for('add_to_cart') }}" method="POST" onsubmit="handleAddToCart(event)">
+        <input type="hidden" name="id" value="{{ product['id'] }}">
+        <input type="hidden" name="name" value="{{ product['name'] }}">
+        <input type="hidden" name="price" value="{{ product['price'] }}">
+        <input type="hidden" name="image" value="{{ product['image'] }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="hover-cart-icon-btn">
+          <img class="hover-cart-icon" src="{{ url_for('static', filename='icons/cart.png') }}" alt="Cart Icon">
+        </button>
+      </form>
+      <h4>{{ product['name'] }}</h4>
+      <p class="product-price">₱{{ "{:,.2f}".format(product['price']) }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+</div>
+
+<!-- Add to Cart Notification -->
+<div id="addToCartNotification" class="cart-notification hidden">
+  <p><span id="notifText">Item added to cart!</span></p>
+</div>
+
+<!-- Scripts -->
+<script>
+function toggleDropdown() {
+  const dropdown = document.getElementById("orderDropdown");
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+}
+
+window.addEventListener("click", function (e) {
+  const button = document.querySelector(".dropbtn");
+  const dropdown = document.getElementById("orderDropdown");
+  if (!button.contains(e.target)) {
+    dropdown.style.display = "none";
+  }
+});
+
+function handleAddToCart(event) {
+  const form = event.target;
+  const formData = new FormData(form);
+  const itemName = form.querySelector('input[name="name"]').value;
+
+  fetch(form.action, {
+    method: "POST",
+    body: formData
+  }).then(response => {
+    if (response.ok) {
+      showAddToCartNotification(itemName);
+    }
+  });
+}
+
+function showAddToCartNotification(name) {
+  const notif = document.getElementById("addToCartNotification");
+  const text = document.getElementById("notifText");
+  text.innerText = `${name} added to cart`;
+
+  notif.classList.remove("hidden");
+  notif.classList.add("fade-in");
+
+  setTimeout(() => {
+    notif.classList.remove("fade-in");
+    notif.classList.add("fade-out");
+  }, 4000);
+
+  setTimeout(() => {
+    notif.classList.remove("fade-out");
+    notif.classList.add("hidden");
+  }, 5000);
+}
+</script>
+
+<script>
+function showCategory(category) {
+  const sections = document.querySelectorAll('.category-section');
+  sections.forEach(section => section.style.display = 'none');
+
+  if (category === 'all') {
+    sections.forEach(section => section.style.display = 'block');
+  } else {
+    const selected = document.getElementById(`category-${category}`);
+    if (selected) {
+      selected.style.display = 'block';
+      selected.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}
+</script>
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const category = params.get("category") || "all";
+  showCategory(category);
+});
+</script>
+
+{% endblock %}
